@@ -25,7 +25,7 @@ The implementation runs entirely **inside PostgreSQL** using the `dblink` extens
 flowchart TB
     subgraph AdminDB[Admin DB - postgres]
         A[Schema: admmgt]
-        A1[Migration Metadata\n(vendor_db_settings, scripts, etc.)]
+        A1[Migration Metadata<br/>(vendor_db_settings, scripts, etc.)]
         A2[Stored Procedures]
     end
 
