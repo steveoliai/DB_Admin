@@ -76,7 +76,7 @@ CALL admmgt.applyMaintenance(t_numdays => 30);
 
 -- Copy procedures from template DB's mgttest schema to all tenants
 CALL admmgt.refesh_stored_procedures();
-
+```
 
 ---
 
