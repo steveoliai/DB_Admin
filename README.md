@@ -2,7 +2,7 @@
 _A DB-Native Approach to Migration Management_
 
 ## Overview
-When designing a **multi-tenant architecture**, the right strategy depends on factors like **tenant isolation**, **scalability**, **operational complexity**, **security**, and **cost**.  
+When designing a **multi-tenant architecture**, your choice of strategy depends on factors like **tenant isolation**, **scalability**, **operational complexity**, **security**, and **cost**.  
 Here’s a simplified trade-off spectrum:
 
 - **Highest isolation & control** → One database per tenant  
@@ -50,62 +50,3 @@ flowchart TB
   TemplateDB -- "Structure Copy" --> DB1
   TemplateDB -- "Structure Copy" --> DB2
   TemplateDB -- "Structure Copy" --> DB3
-
-
-## Scripts Overview
-
-### **Script 1_admin_setup.sql – Initialize Admin Schema**
-Run this script while connected to the **default PostgreSQL database** (commonly `postgres`).
-
-- Creates a schema called **`admmgt`**, the control plane for tenant DB management.
-- Creates all required objects (**tables**, **stored procedures**, etc.) within `admmgt`.
-
----
-
-### **Script demo.sql – Demonstration**
-Simulates a basic use case of the framework.
-
-1. **Create a template database**
-   - Creates a DB called `unitemplate`  
-   - Adds the `mgttest` schema  
-2. **Register databases**
-   - Inserts a record into `admmgt.vendor_db_settings` for `unitemplate` (status: created)  
-   - Inserts a record for `BigClient` (status: pending creation)  
-3. **Create a migration script**
-   - Inserts a record into `admmgt.scripts` with `ID = 1`  
-   - Populates:
-     - `admmgt.script_tables` – Table list  
-     - `admmgt.script_table_columns` – Column definitions  
-     - `admmgt.script_table_partitions` – Partitioning instructions  
-   - Example: Adds **two related tables** with a **foreign key relationship**
-4. **Apply migration updates**
-   - Updates script records to mark them as ready  
-   - Demonstrates:
-     - Adding a **new column**  
-     - Applying **stored procedures**  
-     - Executing a **stored procedure** in migration context  
-
----
-
-## Key Notes
-- **`vendor_db_settings.updateflag`** → Controls which DBs receive updates.  
-- **`vendor_db_settings.scriptversion`** → Tracks current migration script applied to each DB.
-
----
-
-## Procedure Calls
-
-Once setup is complete, use these stored procedures to manage tenant databases:
-
-```sql
--- Create tenant databases marked for creation using the template
-CALL admmgt.create_database();
-
--- Apply pending scripts to relevant databases (starting with template)
-CALL admmgt.applyScripts();
-
--- Maintain range partitions, looking ahead N days
-CALL admmgt.applyMaintenance(t_numdays => 30);
-
--- Copy procedures from template DB's mgttest schema to all tenants
-CALL admmgt.refesh_stored_procedures();
