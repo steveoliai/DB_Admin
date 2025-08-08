@@ -21,7 +21,7 @@ The implementation runs entirely **inside PostgreSQL** using the `dblink` extens
 
 ## Scripts Overview
 
-### **Script 1 – Initialize Admin Schema**
+### **Script 1:  1_admin_setup.sql  – Initialize Admin Schema**
 Run this script while connected to the **default PostgreSQL database** (commonly `postgres`).
 
 - Creates a schema called **`admmgt`**, the control plane for tenant DB management.
@@ -29,7 +29,7 @@ Run this script while connected to the **default PostgreSQL database** (commonly
 
 ---
 
-### **Script 2 – Demonstration**
+### **Script 2: demo.sql – Demonstration**
 Simulates a basic use case of the framework.
 
 1. **Create a template database**
