@@ -19,9 +19,41 @@ The implementation runs entirely **inside PostgreSQL** using the `dblink` extens
 
 ---
 
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph AdminDB[Admin DB - postgres]
+        A[Schema: admmgt]
+        A1[Migration Metadata\n(vendor_db_settings, scripts, etc.)]
+        A2[Stored Procedures]
+    end
+
+    subgraph TemplateDB[Template DB - unitemplate]
+        T1[Schema: mgttest]
+        T2[Base Tables & Structures]
+        T3[Stored Procedures]
+    end
+
+    subgraph Tenants[Multiple Tenant Databases]
+        direction TB
+        DB1[Tenant DB - BigClient]
+        DB2[Tenant DB - ClientB]
+        DB3[Tenant DB - ClientC]
+    end
+
+    A -- dblink --> TemplateDB
+    A -- dblink --> DB1
+    A -- dblink --> DB2
+    A -- dblink --> DB3
+
+    TemplateDB -- Structure Copy --> DB1
+    TemplateDB -- Structure Copy --> DB2
+    TemplateDB -- Structure Copy --> DB3
+
 ## Scripts Overview
 
-### **Script 1 – Initialize Admin Schema**
+### **Script 1_admin_setup.sql – Initialize Admin Schema**
 Run this script while connected to the **default PostgreSQL database** (commonly `postgres`).
 
 - Creates a schema called **`admmgt`**, the control plane for tenant DB management.
@@ -29,7 +61,7 @@ Run this script while connected to the **default PostgreSQL database** (commonly
 
 ---
 
-### **Script 2 – Demonstration**
+### **Script demo.sql – Demonstration**
 Simulates a basic use case of the framework.
 
 1. **Create a template database**
