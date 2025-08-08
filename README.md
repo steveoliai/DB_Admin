@@ -112,6 +112,12 @@ flowchart TB
   TemplateDB -- "Structure Copy" --> DB2
   TemplateDB -- "Structure Copy" --> DB3
 
+```
+
+```mermaid
+
+## Migration Flow Diagram
+
 flowchart LR
   A["Define Script in Admin DB<br/>(admmgt.scripts, script_tables,<br/>script_table_columns, script_table_partitions)"] 
     --> B["Mark Script Ready<br/>(e.g., status/flags updated)"]
@@ -128,4 +134,3 @@ flowchart LR
   E -- "No" --> H
 
   H --> I["Optional: CALL admmgt.applyMaintenance(30)<br/>(range partition upkeep)"]
-What this shows:
