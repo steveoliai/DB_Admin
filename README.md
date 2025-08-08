@@ -114,10 +114,9 @@ flowchart TB
 
 ```
 
-```mermaid
-
 ## Migration Flow Diagram
 
+```mermaid
 flowchart LR
   A["Define Script in Admin DB<br/>(admmgt.scripts, script_tables,<br/>script_table_columns, script_table_partitions)"] 
     --> B["Mark Script Ready<br/>(e.g., status/flags updated)"]
