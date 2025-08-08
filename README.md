@@ -50,3 +50,8 @@ flowchart TB
   TemplateDB -- "Structure Copy" --> DB1
   TemplateDB -- "Structure Copy" --> DB2
   TemplateDB -- "Structure Copy" --> DB3
+
+---
+
+### **Script 2 – Demonstration**
+Simulates a basic use case of the framework.
