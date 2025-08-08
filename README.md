@@ -112,3 +112,20 @@ flowchart TB
   TemplateDB -- "Structure Copy" --> DB2
   TemplateDB -- "Structure Copy" --> DB3
 
+flowchart LR
+  A["Define Script in Admin DB<br/>(admmgt.scripts, script_tables,<br/>script_table_columns, script_table_partitions)"] 
+    --> B["Mark Script Ready<br/>(e.g., status/flags updated)"]
+
+  B --> C["Run: CALL admmgt.applyScripts()"]
+  C --> D["Apply to Template DB<br/>(unitemplate via dblink)"]
+
+  D --> E{Template Apply<br/>Successful?}
+
+  E -- "Yes" --> F["Propagate to Tenant DBs<br/>(iterate vendor_db_settings with updateflag=true)"]
+  F --> G["Update scriptversion<br/>per database"]
+  G --> H["Log results / exceptions"]
+
+  E -- "No" --> H
+
+  H --> I["Optional: CALL admmgt.applyMaintenance(30)<br/>(range partition upkeep)"]
+What this shows:
