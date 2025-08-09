@@ -44,6 +44,8 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
    CALL admmgt.applyScripts();
 ```
 
+---
+
 ## CI/CD Flow Diagram
 
 ```mermaid
