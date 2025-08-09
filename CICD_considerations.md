@@ -42,6 +42,7 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
 4. **Run Migration Command**
    ```sql
    CALL admmgt.applyScripts();
+   ```
 
 ## CI/CD Flow Diagram
 
