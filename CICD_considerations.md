@@ -50,16 +50,16 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
 
 ```mermaid
 flowchart LR
-  A[Developer commits SQL changes<br/>and migration metadata] --> B[CI triggers on changes<br/>under migrations/]
-  B --> C[Validate SQL with linters<br/>and unit tests for procedures]
-  C --> D[Connect to Admin DB using<br/>secrets from vault]
-  D --> E[Insert/Update metadata in admmgt tables<br/>(scripts, script_tables, columns, partitions)]
+  A[Developer commits SQL changes and migration metadata] --> B[CI triggers on changes under the migrations path]
+  B --> C[Validate SQL with linters and run unit tests for procedures]
+  C --> D[Connect to Admin DB using secrets from a vault]
+  D --> E[Insert or update metadata in admmgt tables: scripts, script_tables, columns, partitions]
   E --> F[Mark script ready for apply]
-  F --> G[Run CALL admmgt.applyScripts()]
-  G --> H{Apply to Template DB<br/>successful?}
-  H -- Yes --> I[Propagate to tenants with updateflag=true<br/>via dblink]
-  I --> J[Update scriptversion per DB<br/>and capture results]
-  J --> K[Run optional maintenance<br/>CALL admmgt.applyMaintenance(30)]
-  K --> L[Sync procedures to tenants<br/>CALL admmgt.refesh_stored_procedures()]
-  L --> M[Publish logs and status<br/>to CI artifacts/observability]
+  F --> G[Run CALL admmgt.applyScripts]
+  G --> H{Apply to Template DB successful}
+  H -- Yes --> I[Propagate to tenant databases with updateflag true via dblink]
+  I --> J[Update scriptversion for each database and capture results]
+  J --> K[Optional maintenance: CALL admmgt.applyMaintenance with lookahead days]
+  K --> L[Sync procedures to tenants: CALL admmgt.refesh_stored_procedures]
+  L --> M[Publish logs and status to CI artifacts and observability]
   H -- No --> R[Fail job, publish errors, halt propagation]
