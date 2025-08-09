@@ -44,6 +44,23 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
    CALL admmgt.applyScripts();
    ```
 
+5. **Post-Deployment (Maintenance & QA)**
+   - **Partition Maintenance**       
+    ```sql        
+   CALL admmgt.applyMaintenance(t_numdays => 30);    
+   ```   
+   - **Procedure Sync**       
+   ```sql       
+   CALL admmgt.refesh_stored_procedures();
+   ```
+   - **Smoke Tests across sampled tenants.**
+   - **Centralized Logging (ELK, Cloud Logging, CloudWatch, etc.).**
+
+6. **Rollback Strategy**
+   - **Procedural Rollbacks: Ship inverse procedures with the migration.**
+   - **Transactional Safety: Wrap changes in transactions where feasible.**
+   - **Template-First Rollback: Revert unitemplate prior to tenant DBs.**
+   - **Targeted Rollback: Control blast radius using updateflag.**
 ---
 
 ## CI/CD Flow Diagram
