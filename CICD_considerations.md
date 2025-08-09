@@ -38,7 +38,7 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
      - `admmgt.script_table_columns`
      - `admmgt.script_table_partitions` (if applicable)
 3. **Mark Script Ready**
-   - Set `readyflag = true` or equivalent status.
+   - Set `status = 1`.
 4. **Run Migration Command**
    ```sql
    CALL admmgt.applyScripts();
