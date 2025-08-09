@@ -1,4 +1,7 @@
 
+---****WORK IN PROGRESS!!!!
+---****CAUTION!!!
+---****This procedure drops partitions and deletes data based on table definitions
 --supports 3 lifecycle column conditions
 CREATE OR REPLACE PROCEDURE admmgt.lifecycleMgt()
 LANGUAGE 'plpgsql'
