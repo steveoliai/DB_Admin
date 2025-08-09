@@ -34,7 +34,9 @@ Simulates a basic use case of the framework.
 
 1. **Create a template database**
    - Creates a DB called `unitemplate`  
-   - Adds the `mgttest` schema. This is a sample schema and can be replaced with the schema(s) needed for your app.  
+   - Adds the `mgttest` schema. 
+     - This is a sample schema and can be replaced with the schema(s) needed for your app.
+     - If you change the schema name, make sure that is reflected when inserting data to create objects (tables..).
 2. **Register databases**
    - Inserts a record into `admmgt.vendor_db_settings` for `unitemplate` (status: created)  
    - Inserts a record for `BigClient` (status: pending creation)  
