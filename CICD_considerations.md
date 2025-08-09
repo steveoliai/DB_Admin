@@ -46,7 +46,7 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
 
 ### 3. **Post-Deployment (Maintenance & QA)**
    - **Partition Maintenance**       
-    ```sql        
+   ```sql        
    CALL admmgt.applyMaintenance(t_numdays => 30);    
    ```   
    - **Procedure Sync**       
