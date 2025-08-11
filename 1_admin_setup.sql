@@ -80,12 +80,12 @@ BEGIN
     select lower(dbname) into t_dbname  from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
     t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
 
-    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status <= 2;
+    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status = 1;
 
     --we need to know is migration procedures were applied before the other schema changes
     --this way we can replicate what happened on a DB that doesn't upgrade with the template
 
-    if t_maxscriptid = t_scriptid then
+    if t_maxscriptid = t_scriptid then --this is a pre migration run
         t_ispremigration := true;
     else
         t_ispremigration := false;
@@ -170,7 +170,7 @@ BEGIN
     select lower(dbname) into t_dbname from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
     t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
 
-    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status <= 2;
+    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status = 1;
 
     --we need to know is migration procedures were applied before the other schema changes
     --this way we can replicate what happened on a DB that doesn't upgrade with the template
@@ -872,7 +872,6 @@ BEGIN
 
         commit;
         END LOOP; --DB loop
-        call admmgt.refesh_stored_procedures(t_scriptid); --refresh stored procedures on tenants and backup definitions
 
         --check if created DB's script version level is at least as high as the script that was just applied
         select count(*) into t_check from admmgt.vendor_db_settings where status = 2 and coalesce(scriptversion, 0) < t_scriptid; 
@@ -889,6 +888,9 @@ BEGIN
             update admmgt.script_procs set status = 2 where status = 1 and scriptid = t_scriptid;
             commit;
         end if;
+
+        call admmgt.refesh_stored_procedures(t_scriptid); --refresh stored procedures on tenants and backup definitions
+
     END LOOP; --script loop
 END;
 $BODY$;      
