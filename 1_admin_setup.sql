@@ -48,6 +48,15 @@ BEGIN
 END;
 $BODY$;
 
+--this table is used to capture stored procedure changes made on template DB in order to replay past migrations
+--for daatabase set to NOT update with others
+
+create table  admmgt.script_proc_log(id bigserial, scriptid integer, createdon timestamp default current_timestamp, ispremigration boolean, commstat TEXT);
+
+ALTER TABLE admmgt.script_proc_log ADD CONSTRAINT script_proc_log_pkey PRIMARY KEY(id);
+
+create index script_proc_log_scriptid on admmgt.script_log(scriptid);
+
 
 --when called, this procedure will loop through procedures in the template DB and apply them to the tenants
 CREATE OR REPLACE PROCEDURE  admmgt.refesh_stored_procedures()
@@ -61,10 +70,25 @@ DECLARE
     t_template_proc_record RECORD;
     t_template_conn_str TEXT;
     t_remote_conn_str TEXT;
+    t_scriptid integer;
+    t_maxscriptid integer;
+    t_ispremigration boolean;
 
 BEGIN
-	    
-    t_template_conn_str := 'dbname = unitemplate user=postgres password=your-password port = 5432';
+	
+    select lower(dbname), coalesce(scriptversion,0) into t_dbname, t_scriptid from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
+    t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
+
+    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status <= 2;
+
+    --we need to know is migration procedures were applied before the other schema changes
+    --this way we can replicate what happened on a DB that doesn't upgrade with the template
+
+    if t_maxscriptid > t_scriptid then
+        t_ispremigration := true;
+    else
+        t_ispremigration := false;
+    end if;
 
     --get stored procs in mgttest schema from template db excluding trigger functions
     t_cmd := 'SELECT
@@ -80,6 +104,19 @@ BEGIN
                 ORDER BY
                     p.oid';
 
+    --loop to backup current proc definitions
+
+    FOR t_template_proc_record IN
+        SELECT body
+        FROM dblink(t_template_conn_str, t_cmd)
+        AS remote_procs(body TEXT)
+    LOOP
+        insert into admmgt.script_proc_log(scriptid, ispremigration, commstat)
+            values (t_scriptid, t_ispremigration, t_template_proc_record.body);
+
+    END LOOP;
+
+    --loop to apply to tenants
     FOR t_dbname in (select lower(dbname) from admmgt.vendor_db_settings where status = 2 and istemplate  = false and updateflag = true)
     LOOP
 
