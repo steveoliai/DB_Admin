@@ -8,6 +8,12 @@ CREATE DATABASE replaytest;
 CREATE SCHEMA mgttest
     AUTHORIZATION postgres;
 
+
+--insert template record for the DB created above
+insert into admmgt.vendor_db_settings (dbname,istemplate, status, updateflag) values ('replaytest', false, 2, false);
+
+
+
 --*******
 --disconnect from replaytest and reconnect to main postgresDB
 */
