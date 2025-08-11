@@ -49,17 +49,19 @@ END;
 $BODY$;
 
 --this table is used to capture stored procedure changes made on template DB in order to replay past migrations
---for daatabase set to NOT update with others
+--for database set to NOT update with others
 
 create table  admmgt.script_proc_log(id bigserial, scriptid integer, createdon timestamp default current_timestamp, ispremigration boolean, commstat TEXT);
 
 ALTER TABLE admmgt.script_proc_log ADD CONSTRAINT script_proc_log_pkey PRIMARY KEY(id);
 
-create index script_proc_log_scriptid on admmgt.script_log(scriptid);
+create index script_proc_log_scriptid on admmgt.script_proc_log(scriptid);
 
 
 --when called, this procedure will loop through procedures in the template DB and apply them to the tenants
-CREATE OR REPLACE PROCEDURE  admmgt.refesh_stored_procedures()
+--it will be called automatically before and after a script is applied.
+
+CREATE OR REPLACE PROCEDURE  admmgt.refesh_stored_procedures(t_scriptid IN integer)
 LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
@@ -70,13 +72,12 @@ DECLARE
     t_template_proc_record RECORD;
     t_template_conn_str TEXT;
     t_remote_conn_str TEXT;
-    t_scriptid integer;
     t_maxscriptid integer;
     t_ispremigration boolean;
 
 BEGIN
 	
-    select lower(dbname), coalesce(scriptversion,0) into t_dbname, t_scriptid from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
+    select lower(dbname) into t_dbname  from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
     t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
 
     select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status <= 2;
@@ -84,7 +85,7 @@ BEGIN
     --we need to know is migration procedures were applied before the other schema changes
     --this way we can replicate what happened on a DB that doesn't upgrade with the template
 
-    if t_maxscriptid > t_scriptid then
+    if t_maxscriptid = t_scriptid then
         t_ispremigration := true;
     else
         t_ispremigration := false;
@@ -138,6 +139,95 @@ BEGIN
 
 END;
 $BODY$;
+
+--this table is used to capture view changes made on template DB in order to replay past migrations
+
+
+create table  admmgt.script_view_log(id bigserial, scriptid integer, createdon timestamp default current_timestamp, ispremigration boolean, commstat TEXT);
+
+ALTER TABLE admmgt.script_view_log ADD CONSTRAINT script_view_log_pkey PRIMARY KEY(id);
+
+create index script_view_log_scriptid on admmgt.script_view_log(scriptid);
+
+
+--when called, this procedure will loop through views in the template DB and apply them to the tenants
+CREATE OR REPLACE PROCEDURE  admmgt.refesh_views(t_scriptid IN integer)
+LANGUAGE 'plpgsql'
+AS $BODY$
+DECLARE
+    t_cmd TEXT;
+    t_schema varchar;
+    t_id bigint;
+    t_dbname varchar;
+    t_template_proc_record RECORD;
+    t_template_conn_str TEXT;
+    t_remote_conn_str TEXT;
+    t_maxscriptid integer;
+    t_ispremigration boolean;
+
+BEGIN
+	
+    select lower(dbname) into t_dbname from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
+    t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
+
+    select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status <= 2;
+
+    --we need to know is migration procedures were applied before the other schema changes
+    --this way we can replicate what happened on a DB that doesn't upgrade with the template
+
+    if t_maxscriptid = t_scriptid then
+        t_ispremigration := true;
+    else
+        t_ispremigration := false;
+    end if;
+
+    --get views in mgttest schema from template db excluding trigger functions
+    t_cmd := 'SELECT ''create or replace view ''||n.nspname||''.''||c.relname||'' as ''||pg_get_viewdef(c.oid, true) AS body
+                FROM
+                    pg_class c
+                JOIN
+                    pg_namespace n ON n.oid = c.relnamespace
+                WHERE
+                    c.relkind = ''v''
+                    and n.nspname = ''mgttest''
+                ORDER BY
+                    c.oid';
+
+    --loop to backup current view definitions
+
+    FOR t_template_proc_record IN
+        SELECT body
+        FROM dblink(t_template_conn_str, t_cmd)
+        AS remote_procs(body TEXT)
+    LOOP
+        insert into admmgt.script_view_log(scriptid, ispremigration, commstat)
+            values (t_scriptid, t_ispremigration, t_template_proc_record.body);
+
+    END LOOP;
+
+    --loop to apply to tenants
+    FOR t_dbname in (select lower(dbname) from admmgt.vendor_db_settings where status = 2 and istemplate  = false and updateflag = true)
+    LOOP
+
+        t_remote_conn_str := 'dbname='||t_dbname||' user=postgres password=your-password port = 5432';
+
+
+        FOR t_template_proc_record IN
+            SELECT body
+            FROM dblink(t_template_conn_str, t_cmd)
+            AS remote_procs(body TEXT)
+        LOOP
+            -- Process each procedure
+            PERFORM dblink_exec(t_remote_conn_str, t_template_proc_record.body);
+            
+        END LOOP;
+
+
+    END LOOP;
+
+END;
+$BODY$;
+
 
 create table admmgt.scripts(
     id INT,
