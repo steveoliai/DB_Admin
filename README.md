@@ -76,8 +76,8 @@ CALL admmgt.applyScripts();
 -- Maintain range partitions, looking ahead N days
 CALL admmgt.applyMaintenance(t_numdays => 30);
 
--- Copy procedures from template DB's mgttest schema to all tenants
-CALL admmgt.refesh_stored_procedures();
+-- Copy procedures from template DB's mgttest schema to all tenants Called before and after migration scripts by applyScripts.
+CALL admmgt.refesh_stored_procedures(t_scriptid);
 ```
 
 ---
