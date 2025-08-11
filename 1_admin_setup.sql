@@ -852,6 +852,7 @@ BEGIN
     --need to find scripts in sequence that are ready to be applied (status = 1)
     FOR t_scriptid in (select id from admmgt.scripts where status = 1 order by id)
     LOOP
+        call admmgt.refesh_stored_procedures(t_scriptid); --refresh stored procedures on tenants and backup definitions
         --DB loop
         --list of databases ready to have scripts applied
         FOR t_dbname, t_dbid in (select lower(dbname), id from admmgt.vendor_db_settings where status = 2 and updateflag = true and coalesce(scriptversion,0) < t_scriptid order by istemplate desc)
@@ -871,6 +872,7 @@ BEGIN
 
         commit;
         END LOOP; --DB loop
+        call admmgt.refesh_stored_procedures(t_scriptid); --refresh stored procedures on tenants and backup definitions
 
         --check if created DB's script version level is at least as high as the script that was just applied
         select count(*) into t_check from admmgt.vendor_db_settings where status = 2 and coalesce(scriptversion, 0) < t_scriptid; 
