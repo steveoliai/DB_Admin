@@ -169,5 +169,21 @@ call admmgt.applyScripts();
 
 --check the mgttest.parenttable in both the template and BigClient DBs to see that there is now data there.
 
---!!!!!!!!NOTE!!!!!!! 
---At this point, I've kept stored procedure execution separate (in it's own script). I will be adding logic to refresh stored procedures inside of the applyScripts procedures 
+
+
+--what if I want to add a JSONB column to an existing table?  Is that supported?
+--yes! json is supported.  It's a great way to add flexibility in your datamodel for customers!
+
+insert into admmgt.scripts(id, description)  values (4, 'add jsonb column to existing table');
+
+--make should tableid value is for the table that was previously created
+insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
+    values (2, 4, 'jsoncolumn', 'jsonb', 1, NULL, 0, 0);
+
+--set status 
+
+update admmgt.scripts set status = 1 where id = 4;
+
+update admmgt.script_table_columns  set status = 1 where scriptid = 4;
+
+call admmgt.applyScripts(); --to apply scripts to databases ready to have them applied
