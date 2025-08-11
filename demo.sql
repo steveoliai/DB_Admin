@@ -147,8 +147,10 @@ $BODY$;
 
 --connect to the main postgresql DB
 
+--!!!!***NOTE this procedure is called as the first step when calleing applyScripts
 
-call admmgt.refesh_stored_procedures();
+call admmgt.refesh_stored_procedures(t_scriptid); --pass the id of the latest script entry
+
 
 --check the BigClient DB for the procedure
 
