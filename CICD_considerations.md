@@ -49,10 +49,7 @@ The goal is to ensure that **schema changes**, **stored procedures**, and **part
    ```sql        
    CALL admmgt.applyMaintenance(t_numdays => 30);    
    ```   
-   - **Procedure Sync**       
-   ```sql       
-   CALL admmgt.refesh_stored_procedures();
-   ```
+
    - **Smoke Tests across sampled tenants.**
    - **Centralized Logging (ELK, Cloud Logging, CloudWatch, etc.).**
 
