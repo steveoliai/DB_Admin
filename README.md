@@ -17,6 +17,7 @@ While tools like **Flyway** and **Liquibase** work well, this proof of concept u
 
 The implementation runs entirely **inside PostgreSQL** using the `dblink` extension, with authentication currently handled in stored procedures (to be reworked for production).
 
+- **Note** → I'm working on a change to also support **one schema** per tenant
 ---
 
 ## Scripts Overview
