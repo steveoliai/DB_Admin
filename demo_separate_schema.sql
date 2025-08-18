@@ -1,36 +1,31 @@
 
---create template DB
---connect to main postgresDB
---this can not be run in a transaction block
---run create database alone
-CREATE DATABASE unitemplate;
+--create template SCHEMA
 
---connect to unitemplate and add this schema:
+--insert template schema record
 
-CREATE SCHEMA mgttest
-    AUTHORIZATION postgres;
-
---*******
---disconnect from unitemplate and reconnect to main postgresDB
-
---insert template record for the DB created above
-insert into admmgt.vendor_db_settings (dbname,istemplate, status) values ('unitemplate', true, 2);
+insert into admmgt.vendor_db_settings (dbname,istemplate, status) values ('unitemplate', true, 1);
 
 
 --sample data
-insert into admmgt.vendor_db_settings (dbname) values ('BigClient');
+insert into admmgt.vendor_db_settings (dbname) values ('bigclient');
 --setting status to "pending" to the procedure will create it
-update admmgt.vendor_db_settings set status = 1 where dbname = 'BigClient';
+update admmgt.vendor_db_settings set status = 1 where dbname = 'bigclient';
 
+
+--call admmgt.create_schema();
 
 
 insert into admmgt.scripts(id, description)  values (1, 'test to create new stuff');
+
+---***********!!!!!
+--NOTE: In a schema per tenant implementation, the value for schemaname MUST be your template schema name
+---***********!!!!!
 
 --in the insert below haspart = 1. This is noting that the table which needs to be created is partition
 --the value for lifecylce '{"status":"X", "inactive_date":"current_date-100"}' means that anything in this table where status = X and inactive_date < 100 days old is to be removed
 --I have another procedure that deals with lifecylce which is comming soon.
 
-insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('mgttest', 1, 'test_table', 0, 1, '{"status":"X", "inactive_date":"current_date-100"}', 'pg_default');
+insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('unitemplate', 1, 'test_table', 0, 1, '{"status":"X", "inactive_date":"current_date-100"}', 'pg_default');
 
 --get id generated from insert for later inserts (repalce 1).
 
@@ -54,6 +49,7 @@ insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype
 --parttype can be list or range
 --supports list, range, and list/range composite partitioning (which is what the inserts below setup)
 
+
 insert into admmgt.script_table_partitions (tableid, partcolumnname, parttype, partvalue, parttbs)
     values (1, 'status', 'list', 'A', 'pg_default');
 
@@ -62,13 +58,13 @@ insert into admmgt.script_table_partitions (tableid, partcolumnname, parttype, p
 
 --add a parent and child table
 --parent
-insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('mgttest', 1, 'parenttable', 0, 0, null, 'pg_default');
+insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('unitemplate', 1, 'parenttable', 0, 0, null, 'pg_default');
 
 insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
     values (2, 1, 'id', 'bigint', 0, NULL, 1, 1);
 
 --child
-insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('mgttest', 1, 'childtable', 0, 0, null, 'pg_default');
+insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('unitemplate', 1, 'childtable', 0, 0, null, 'pg_default');
 
 insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
     values (3, 1, 'id', 'bigint', 0, NULL, 1, 1);
@@ -79,7 +75,7 @@ insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype
 --foreign key
 
 insert into admmgt.script_table_fkeys (scriptid, schemaname, childtablename, childcolumnname, parenttablename, parentcolumnname, keyorder, delrule)
-    values (1, 'mgttest', 'childtable', 'parentid', 'parenttable', 'id', 1, 'CASCADE');
+    values (1, 'unitemplate', 'childtable', 'parentid', 'parenttable', 'id', 1, 'CASCADE');
 
 --once design is complete update the table settings and script rows
 
@@ -91,14 +87,14 @@ update admmgt.script_table_fkeys  set status = 1 where scriptid = 1;
 
 update admmgt.script_table_columns  set status = 1 where scriptid = 1;
 
+--NOTE: Run Procedures ONE AT A TIME
+call admmgt.create_schema(); --to create pending schemas
 
-call admmgt.create_database(); --to create pending databases
+call admmgt.applyScripts(0); --to apply scripts to schemas ready to have them applied
+    --passing 0 means this is a separate schema implementation
 
-call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
---passing 1 above indicates that this is a DB per tenant scenario
-
-call admmgt.applyMaintenance(1, t_numdays => 10); -- to maintain range paritions t_numdays = look ahead
---check BigClient DB, mgttest.test_table partitions after running the applyMaintenance procedure
+call admmgt.applyMaintenance(0, t_numdays => 100); -- to maintain range paritions t_numdays = look ahead
+--check BigClient and unitemplate schemas "test_table" partitions after running the applyMaintenance procedure
 
 --check the log for statements that were executed:
 select * from admmgt.script_log;
@@ -119,17 +115,15 @@ update admmgt.scripts set status = 1 where id = 2;
 
 update admmgt.script_table_columns  set status = 1 where scriptid = 2;
 
-call admmgt.applyScripts(); --to apply scripts to databases ready to have them applied
+call admmgt.applyScripts(0); --to apply scripts to schemas ready to have them applied
 
---check the results by looking at mgttest.parenttable for "newcolumn"
+--check the results by looking at unitemplate.parenttable for "newcolumn"
 
---how to I apply stored procedures to all tenant databases?
+--how to I apply stored procedures to all tenant schemas?
 
---connect to the template DB (unitemplate)
+--add this procedure to the DB in the template schema
 
---add this procedure to the DB
-
-CREATE OR REPLACE PROCEDURE mgttest.testproc1()
+CREATE OR REPLACE PROCEDURE unitemplate.testproc1()
 LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
@@ -138,19 +132,16 @@ DECLARE
 BEGIN
     t_int := 1;
     WHILE t_int <= 5 LOOP
-        insert into mgttest.parenttable(newcolumn) values(t_int::varchar);
+        insert into unitemplate.parenttable(newcolumn) values(t_int::varchar);
         t_int := t_int + 1;
     END LOOP;
 END;
 $BODY$;   
 
---disconnect from the template DB
-
---connect to the main postgresql DB
 
 --!!!!***NOTE this procedure is called as the first step when calleing applyScripts
 
-call admmgt.refesh_stored_procedures(t_scriptid); --pass the id of the latest script entry
+call admmgt.refesh_stored_procedures(0, 2); --pass the id (replace 2) of the latest script entry
 
 
 --check the BigClient DB for the procedure
@@ -160,15 +151,15 @@ call admmgt.refesh_stored_procedures(t_scriptid); --pass the id of the latest sc
 
 insert into admmgt.scripts(id, description)  values (3, 'call stored proc');
 
-insert into admmgt.script_procs(scriptid, proccallstmt) values (3,'call mgttest.testproc1()' );
+insert into admmgt.script_procs(scriptid, proccallstmt) values (3,'call unitemplate.testproc1()' );
 
 update admmgt.script_procs set status = 1 where scriptid = 3;
 
 update admmgt.scripts set status = 1 where id = 3;
 
-call admmgt.applyScripts(); 
+call admmgt.applyScripts(0); 
 
---check the mgttest.parenttable in both the template and BigClient DBs to see that there is now data there.
+--check the parenttable in both the unitemplate and BigClient schemas to see that there is now data there.
 
 
 
@@ -187,4 +178,4 @@ update admmgt.scripts set status = 1 where id = 4;
 
 update admmgt.script_table_columns  set status = 1 where scriptid = 4;
 
-call admmgt.applyScripts(); --to apply scripts to databases ready to have them applied
+call admmgt.applyScripts(0); --to apply scripts to databases ready to have them applied
