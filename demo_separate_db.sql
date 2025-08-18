@@ -119,7 +119,7 @@ update admmgt.scripts set status = 1 where id = 2;
 
 update admmgt.script_table_columns  set status = 1 where scriptid = 2;
 
-call admmgt.applyScripts(); --to apply scripts to databases ready to have them applied
+call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
 
 --check the results by looking at mgttest.parenttable for "newcolumn"
 
@@ -150,7 +150,7 @@ $BODY$;
 
 --!!!!***NOTE this procedure is called as the first step when calleing applyScripts
 
-call admmgt.refesh_stored_procedures(t_scriptid); --pass the id of the latest script entry
+call admmgt.refesh_stored_procedures(1, 2); --1 = DB per tenant and 2 = pass the id of the latest script entry
 
 
 --check the BigClient DB for the procedure
@@ -166,7 +166,7 @@ update admmgt.script_procs set status = 1 where scriptid = 3;
 
 update admmgt.scripts set status = 1 where id = 3;
 
-call admmgt.applyScripts(); 
+call admmgt.applyScripts(1); 
 
 --check the mgttest.parenttable in both the template and BigClient DBs to see that there is now data there.
 
@@ -187,4 +187,4 @@ update admmgt.scripts set status = 1 where id = 4;
 
 update admmgt.script_table_columns  set status = 1 where scriptid = 4;
 
-call admmgt.applyScripts(); --to apply scripts to databases ready to have them applied
+call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
