@@ -1,4 +1,4 @@
-# Multi-Tenant Architecture: A Database Per Tenant?  
+# Multi-Tenant Architecture: A Database or Schema Per Tenant?  
 _A DB-Native Approach to Migration Management_
 
 ## Overview
@@ -9,7 +9,7 @@ Here’s a simplified trade-off spectrum:
 - **Balance of isolation & manageability** → One schema per tenant  
 - **Simplicity & scalability** → Shared schema with partitioned tables  
 
-If you choose **a separate database per tenant**, you must manage the operational overhead of maintaining and migrating objects across many databases.
+If you choose **a separate database or schema per tenant**, you must manage the operational overhead of maintaining and migrating objects across many databases.
 
 While tools like **Flyway** and **Liquibase** work well, this proof of concept uses a **database-native approach** for more granular control — particularly for:
 - Table creation (including **partitioning** support)
@@ -17,7 +17,6 @@ While tools like **Flyway** and **Liquibase** work well, this proof of concept u
 
 The implementation runs entirely **inside PostgreSQL** using the `dblink` extension, with authentication currently handled in stored procedures (to be reworked for production).
 
-- **Note** → I'm working on a change to also support **one schema** per tenant
 ---
 
 ## Scripts Overview
@@ -30,7 +29,7 @@ Run this script while connected to the **default PostgreSQL database** (commonly
 
 ---
 
-### **Script 2: demo_separate_db.sql – Demonstration**
+### **Script 2a: demo_separate_db.sql – Demonstration**
 Simulates a basic use case of the framework when using separate DBs for each tenant.
 
 1. **Create a template database**
@@ -57,6 +56,28 @@ Simulates a basic use case of the framework when using separate DBs for each ten
 
 ---
 
+### **Script 2b: demo_separate_schema.sql – Demonstration**
+Simulates a basic use case of the framework when using separate schemas for each tenant.
+
+1. **Register schemas**
+   - Inserts a record into `admmgt.vendor_db_settings` for `unitemplate` (status: pending creation)  
+   - Inserts a record for `BigClient` (status: pending creation)  
+2. **Create a migration script**
+   - Inserts a record into `admmgt.scripts` with `ID = 1`  
+   - Populates:
+     - `admmgt.script_tables` – Table list  
+     - `admmgt.script_table_columns` – Column definitions  
+     - `admmgt.script_table_partitions` – Partitioning instructions  
+   - Example: Adds **two related tables** with a **foreign key relationship**
+3. **Apply migration updates**
+   - Updates script records to mark them as ready  
+   - Demonstrates:
+     - Adding a **new column**  
+     - Applying **stored procedures**  
+     - Executing a **stored procedure** in migration context  
+
+---
+
 ## Key Notes
 - **`vendor_db_settings.updateflag`** → Controls which DBs receive updates.  
 - **`vendor_db_settings.scriptversion`** → Tracks current migration script applied to each DB.
@@ -72,18 +93,18 @@ Once setup is complete, use these stored procedures to manage tenant databases:
 CALL admmgt.create_database();
 
 -- Apply pending scripts to relevant databases (starting with template)
-CALL admmgt.applyScripts();
+CALL admmgt.applyScripts(t_separatedb); --pass 1 or 0 (Separate DB 1 or Schema 0)
 
 -- Maintain range partitions, looking ahead N days
-CALL admmgt.applyMaintenance(t_numdays => 30);
+CALL admmgt.applyMaintenance(t_separatedb, t_numdays => 30);
 
 -- Copy procedures from template DB's mgttest schema to all tenants Called before and after migration scripts by applyScripts.
-CALL admmgt.refesh_stored_procedures(t_scriptid);
+CALL admmgt.refesh_stored_procedures(t_separatedb, t_scriptid);
 ```
 
 ---
 
-## Architecture Diagram
+## Architecture Diagram (Database per Tenant)
 
 ```mermaid
 flowchart TB
@@ -117,7 +138,7 @@ flowchart TB
 
 ```
 
-## Migration Flow Diagram
+## Migration Flow Diagram (Database per Tenant)
 
 ```mermaid
 flowchart LR
