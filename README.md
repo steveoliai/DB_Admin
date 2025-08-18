@@ -30,8 +30,8 @@ Run this script while connected to the **default PostgreSQL database** (commonly
 
 ---
 
-### **Script 2: demo.sql – Demonstration**
-Simulates a basic use case of the framework.
+### **Script 2: demo_separate_db.sql – Demonstration**
+Simulates a basic use case of the framework when using separate DBs for each tenant.
 
 1. **Create a template database**
    - Creates a DB called `unitemplate`  
