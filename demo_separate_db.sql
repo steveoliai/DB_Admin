@@ -52,7 +52,7 @@ insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype
 
 --parition def
 --parttype can be list or range
---supports list/range composite partitioning (which is what the inserts below setup)
+--supports list, range, and list/range composite partitioning (which is what the inserts below setup)
 
 insert into admmgt.script_table_partitions (tableid, partcolumnname, parttype, partvalue, parttbs)
     values (1, 'status', 'list', 'A', 'pg_default');
