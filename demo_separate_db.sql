@@ -188,3 +188,26 @@ update admmgt.scripts set status = 1 where id = 4;
 update admmgt.script_table_columns  set status = 1 where scriptid = 4;
 
 call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
+
+
+--can you add a new table and a column to another table in the same script?
+insert into admmgt.scripts(id, description)  values (5, 'add a new table and a column to another tablee');
+
+insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('mgttest', 5, 'anothertable', 0, 0, null, 'pg_default');
+
+insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
+    values (4, 5, 'id', 'bigint', 0, NULL, 1, 1);
+
+--make should tableid value is for the table that was previously created
+insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
+    values (3, 5, 'nicecolumn', 'jsonb', 1, NULL, 0, 0);
+
+--set status
+update admmgt.scripts set status = 1 where id = 5;
+
+update admmgt.script_tables  set status = 1 where scriptid = 5;
+
+update admmgt.script_table_columns  set status = 1 where scriptid = 5;
+
+
+call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
