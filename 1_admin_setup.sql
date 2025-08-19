@@ -22,7 +22,7 @@ create table admmgt.vendor_db_settings (
     status int default 0, --0 = designing, 1 = pending, 2 = created
 CONSTRAINT vendor_db_settings_pkey PRIMARY KEY (id));
 
-create unique index vendor_db_settings_dbname on admmgt.vendor_db_settings(upper(dbname), deleted);
+create unique index vendor_db_settings_dbname on admmgt.vendor_db_settings(lower(dbname), deleted);
 
 --this table is used to capture stored procedure changes made on template DB in order to replay past migrations
 --for database set to NOT update with others
@@ -534,9 +534,9 @@ BEGIN
 
             --need to set to empty string incase no partition defined
             t_buildstat := ''; 
-            select max(distinct(upper(parttype))) into t_partcheck from admmgt.script_table_partitions where tableid = t_recid;
+            select max(distinct(lower(parttype))) into t_partcheck from admmgt.script_table_partitions where tableid = t_recid;
 
-            select max(distinct(upper(subparttype))) into t_subpartcheck from admmgt.script_table_partitions where subparttype is not null and tableid = t_recid;
+            select max(distinct(lower(subparttype))) into t_subpartcheck from admmgt.script_table_partitions where subparttype is not null and tableid = t_recid;
 
             --partition 
             if t_partcheck is not null then
@@ -768,7 +768,7 @@ BEGIN
     t_nextdate := current_date + t_numdays; --check if new range partition or subpartition will be needed in t_numdays days
 
     --partition maintenance loop
-    FOR t_schemaname, t_tablename, t_partvalue, t_parttbs IN (select schemaname, tablename, partvalue, parttbs from admmgt.script_table_partitions p, admmgt.script_tables t where t.id = p.tableid and t.status = 2 and upper(parttype) = 'RANGE') --only process tables where the definition is completed
+    FOR t_schemaname, t_tablename, t_partvalue, t_parttbs IN (select schemaname, tablename, partvalue, parttbs from admmgt.script_table_partitions p, admmgt.script_tables t where t.id = p.tableid and t.status = 2 and lower(parttype) = 'range') --only process tables where the definition is completed
     LOOP
 
         if lower(t_partvalue) = 'month' then --partition by month
@@ -843,7 +843,7 @@ BEGIN
 
     END LOOP;
     --subpartition maintenance loop
-    FOR t_schemaname, t_tablename, t_partcolumnname, t_partvalue, t_subpartvalue, t_subparttbs IN (select schemaname, tablename, partcolumnname, partvalue, subpartvalue, subparttbs from admmgt.script_table_partitions p, admmgt.script_tables t where t.id = p.tableid and t.status = 2 and upper(subparttype) = 'RANGE') --only process tables where the definition is completed
+    FOR t_schemaname, t_tablename, t_partcolumnname, t_partvalue, t_subpartvalue, t_subparttbs IN (select schemaname, tablename, partcolumnname, partvalue, subpartvalue, subparttbs from admmgt.script_table_partitions p, admmgt.script_tables t where t.id = p.tableid and t.status = 2 and lower(subparttype) = 'range') --only process tables where the definition is completed
     LOOP    
 
 
