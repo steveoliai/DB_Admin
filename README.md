@@ -15,7 +15,7 @@ While tools like **Flyway** and **Liquibase** work well, this proof of concept u
 - Table creation (including **partitioning** support)
 - Managing objects like **stored procedures**
 
-The implementation runs entirely **inside PostgreSQL** using the `dblink` extension, with authentication currently handled in stored procedures (to be reworked for production).
+The implementation runs entirely **inside PostgreSQL** using the `dblink` extension, with authentication currently handled in stored procedures (to be reworked for production: consider ".pgpass" over trust authentication).
 
 ---
 
