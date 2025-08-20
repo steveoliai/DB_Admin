@@ -226,7 +226,7 @@ BEGIN
         --run replay procedure to get new schema to same level
 
 
-        update admmgt.vendor_db_settings set scriptversion = t_scriptversion, status = 2  where id = t_id;
+        update admmgt.vendor_db_settings set status = 2  where id = t_id;
     END LOOP;    
 
 END;
