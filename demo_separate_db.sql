@@ -97,7 +97,7 @@ call admmgt.create_database(); --to create pending databases
 call admmgt.applyScripts(1); --to apply scripts to databases ready to have them applied
 --passing 1 above indicates that this is a DB per tenant scenario
 
-call admmgt.applyMaintenance(1, t_numdays => 10); -- to maintain range paritions t_numdays = look ahead
+call admmgt.applyMaintenance(1, t_numdays => 100); -- to maintain range paritions t_numdays = look ahead
 --check BigClient DB, mgttest.test_table partitions after running the applyMaintenance procedure
 
 --check the log for statements that were executed:

@@ -569,7 +569,7 @@ BEGIN
                 FOR t_schemaname, t_tablename, t_partcolumnname, t_partvalue, t_parttbs, t_subpartcolumnname, t_subparttype, t_subpartvalue, t_subparttbs in (select schemaname, tablename, partcolumnname, partvalue, parttbs, subpartcolumnname, subparttype, subpartvalue, subparttbs from admmgt.script_table_partitions p, admmgt.script_tables  t where t.id = p.tableid and t.status = 1 and tableid = t_recid order by p.id )
                 LOOP
 
-                    if t_partcheck = 'LIST' and (t_subpartcheck = 'RANGE' or t_subpartcheck is null) then
+                    if t_partcheck = 'list' and (t_subpartcheck = 'range' or t_subpartcheck is null) then
                         if t_subpartcolumnname is NULL then 
                             --no subpartition defined so create partition alone
                             t_addtbs:='';
@@ -660,7 +660,7 @@ BEGIN
                             end if;                            
                         end if;
 
-                    elsif t_partcheck = 'RANGE' and (t_subpartcheck is null) then
+                    elsif t_partcheck = 'range' and (t_subpartcheck is null) then
 
                         if lower(t_partvalue) = 'month' then --partition by month
                             select (date_part('month', current_date))::varchar into t_monthfrom;
@@ -1062,6 +1062,7 @@ BEGIN
     FOR t_scriptid in (select id from admmgt.scripts where status = 1 order by id)
     LOOP
         call admmgt.refesh_stored_procedures(t_separatedb, t_scriptid); --refresh stored procedures on tenants and backup definitions
+        commit;
         --DB loop
         --list of databases ready to have scripts applied
         FOR t_dbname, t_dbid in (select lower(dbname), id from admmgt.vendor_db_settings where status = 2 and updateflag = true and coalesce(scriptversion,0) < t_scriptid order by istemplate desc)
@@ -1099,7 +1100,7 @@ BEGIN
         end if;
 
         call admmgt.refesh_stored_procedures(t_separatedb,t_scriptid); --refresh stored procedures on tenants and backup definitions
-
+        commit;
     END LOOP; --script loop
 END;
 $BODY$;      
