@@ -396,7 +396,7 @@ BEGIN
         t_ispremigration := false;
     end if;
 
-    --get views in mgttest schema from template db excluding trigger functions
+    --get views in template schema from template db excluding trigger functions
     t_cmd := 'SELECT ''create or replace view ''||n.nspname||''.''||c.relname||'' as ''||pg_get_viewdef(c.oid, true) AS body
                 FROM
                     pg_class c
