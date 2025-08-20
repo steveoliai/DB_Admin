@@ -8,11 +8,8 @@ insert into admmgt.vendor_db_settings (dbname,istemplate, status) values ('unite
 
 --sample data
 insert into admmgt.vendor_db_settings (dbname) values ('bigclient');
---setting status to "pending" to the procedure will create it
+--setting status to "pending" so the procedure will create it
 update admmgt.vendor_db_settings set status = 1 where dbname = 'bigclient';
-
-
---call admmgt.create_schema();
 
 
 insert into admmgt.scripts(id, description)  values (1, 'test to create new stuff');
@@ -184,7 +181,7 @@ call admmgt.applyScripts(0); --to apply scripts to databases ready to have them 
 --can you add a new table and a column to another table in the same script?
 insert into admmgt.scripts(id, description)  values (5, 'add a new table and a column to another tablee');
 
-insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('mgttest', 5, 'anothertable', 0, 0, null, 'pg_default');
+insert into admmgt.script_tables (schemaname, scriptid, tablename, status, haspart, lifecycle, tblspace) values ('unitemplate', 5, 'anothertable', 0, 0, null, 'pg_default');
 
 insert into admmgt.script_table_columns (tableid, scriptid, columnname, datatype, nullable, defaultval, isprimarykey, isidentity)
     values (4, 5, 'id', 'bigint', 0, NULL, 1, 1);
