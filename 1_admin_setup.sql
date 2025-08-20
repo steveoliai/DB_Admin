@@ -248,13 +248,16 @@ DECLARE
     t_remote_conn_str TEXT;
     t_maxscriptid integer;
     t_ispremigration boolean;
+    t_dbschema varchar;
 
 BEGIN
 	
     select lower(dbname) into t_dbname  from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
     t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
-
+    --this is the schema name for schema per tenant
     t_schema := t_dbname;
+    --this is the schema name for DB per tenant
+    select min(lower(trim(schemaname))) into t_dbschema from admmgt.script_tables;
 
     select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status = 1;
 
@@ -267,7 +270,7 @@ BEGIN
         t_ispremigration := false;
     end if;
 
-    --get stored procs in mgttest schema from template db excluding trigger functions
+    --get stored procs in template schema from template db excluding trigger functions
     t_cmd := 'SELECT
                 pg_catalog.pg_get_functiondef(p.oid) AS body
                 FROM
@@ -276,7 +279,7 @@ BEGIN
                     pg_catalog.pg_namespace n ON n.oid = p.pronamespace
 
                 WHERE
-                    n.nspname LIKE (''mgttest%'')
+                    lower(n.nspname) = ('''||t_dbschema||''')
                     AND p.prorettype <> ''pg_catalog.trigger''::pg_catalog.regtype 
                 ORDER BY
                     p.oid';
@@ -370,13 +373,17 @@ DECLARE
     t_remote_conn_str TEXT;
     t_maxscriptid integer;
     t_ispremigration boolean;
+    t_dbschema varchar;
 
 BEGIN
 	
     select lower(dbname) into t_dbname from admmgt.vendor_db_settings where status = 2 and istemplate  = true and updateflag = true;
     t_template_conn_str := 'dbname ='||t_dbname||' user=postgres password=your-password port = 5432';
 
+    --this is the schema name for schema per tenant
     t_schema := t_dbname;
+    --this is the schema name for DB per tenant
+    select min(lower(trim(schemaname))) into t_dbschema from admmgt.script_tables;
 
     select coalesce(max(id),0) into t_maxscriptid from admmgt.scripts where status = 1;
 
@@ -397,7 +404,7 @@ BEGIN
                     pg_namespace n ON n.oid = c.relnamespace
                 WHERE
                     c.relkind = ''v''
-                    and n.nspname = ''mgttest''
+                    and n.nspname = ('''||t_dbschema||''')
                 ORDER BY
                     c.oid';
 
