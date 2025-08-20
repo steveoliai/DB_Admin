@@ -29,7 +29,7 @@ Run this script while connected to the **default PostgreSQL database** (commonly
 
 ---
 
-### **Script 2a: demo_separate_db.sql – Demonstration**
+### **Script 2a: Option 1 - demo_separate_db.sql – Demonstration**
 Simulates a basic use case of the framework when using separate DBs for each tenant.
 
 1. **Create a template database**
@@ -56,7 +56,7 @@ Simulates a basic use case of the framework when using separate DBs for each ten
 
 ---
 
-### **Script 2b: demo_separate_schema.sql – Demonstration**
+### **Script 2b: Option 2 - demo_separate_schema.sql – Demonstration**
 Simulates a basic use case of the framework when using separate schemas for each tenant.
 
 1. **Register schemas**
