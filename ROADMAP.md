@@ -1,7 +1,7 @@
 # 🚧 Roadmap
 
 This document outlines planned features and enhancements for the **Postgres Tenant Admin (admmgt)** framework.  
-The order below does not necessarily reflect priority — features may be developed in parallel.
+The order below does not necessarily reflect priority - features may be developed in parallel.
 
 ---
 

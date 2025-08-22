@@ -11,7 +11,7 @@ Here’s a simplified trade-off spectrum:
 
 If you choose **a separate database or schema per tenant**, you must manage the operational overhead of maintaining and migrating objects across many databases.
 
-While tools like **Flyway** and **Liquibase** work well, this proof of concept uses a **database-native approach** for more granular control — particularly for:
+While tools like **Flyway** and **Liquibase** work well, this proof of concept uses a **database-native approach** for more granular control - particularly for:
 - Table creation (including **partitioning** support)
 - Managing objects like **stored procedures**
 
